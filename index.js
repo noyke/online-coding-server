@@ -15,24 +15,40 @@ const io = new Server(server, {
   },
 });
 
-let firstClientId = null;
-let isFirstEnter = null;
-let currCodeId = null;
+const codePages = [
+  { codeId: "1", clientsIn: [] },
+  { codeId: "2", clientsIn: [] },
+  { codeId: "3", clientsIn: [] },
+  { codeId: "4", clientsIn: [] },
+];
+
+function deleteDuplicate(index) {
+  codePages[index].clientsIn = [...new Set(codePages[index].clientsIn)];
+}
+
+function deleteClient(index, socketID) {
+  const clientIndex = codePages[index].clientsIn.indexOf(socketID);
+  codePages[index].clientsIn.splice(clientIndex, 1);
+}
 
 io.on("connection", (socket) => {
-  socket.on("code_enter", (codeId) => {
-    firstClientId = currCodeId !== codeId ? null : firstClientId;
-
-    if (!firstClientId) {
-      firstClientId = socket.id;
-      isFirstEnter = true;
-      currCodeId = codeId;
-    } else isFirstEnter = false;
+  socket.on("code_entered", (id) => {
+    socket.join(id);
+    const index = parseInt(id) - 1;
+    const isFirstEnter = codePages[index].clientsIn.length === 0;
+    codePages[index].clientsIn.push(socket.id);
+    deleteDuplicate(index);
 
     socket.emit("is_first", isFirstEnter);
   });
-  socket.on("update_code", (newCode) => {
-    socket.broadcast.emit("updated_code", newCode);
+
+  socket.on("update_code", (data) => {
+    socket.to(data.id).emit("updated_code", data.newCode);
+  });
+
+  socket.on("code_exit", (id) => {
+    const index = parseInt(id) - 1;
+    deleteClient(index, socket.id);
   });
 });
 
