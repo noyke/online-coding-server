@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
+require("dotenv").config();
 
 const {
   onCodeUpdated,
@@ -12,12 +13,12 @@ const {
 const { getExercises } = require("./api");
 
 const corsOptions = {
-  origin: "*",
+  origin: process.env.CLIENT_URL,
   methods: ["GET", "POST"],
 };
 
 const app = express();
-app.use(cors());
+app.use(cors(corsOptions));
 
 const server = http.createServer(app);
 
