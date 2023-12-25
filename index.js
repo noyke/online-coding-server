@@ -137,9 +137,13 @@ function deleteDuplicate(index) {
   codePages[index].clientsIn = [...new Set(codePages[index].clientsIn)];
 }
 
-function deleteClient(index, socketID) {
-  const clientIndex = codePages[index].clientsIn.indexOf(socketID);
-  codePages[index].clientsIn.splice(clientIndex, 1);
+function deleteClient(socketID) {
+  codePages.map((codePage) => {
+    const clientIndex = codePage.clientsIn.indexOf(socketID);
+    if (clientIndex !== -1) {
+      codePage.clientsIn.splice(clientIndex, 1);
+    }
+  });
 }
 
 io.on("connection", (socket) => {
@@ -157,9 +161,12 @@ io.on("connection", (socket) => {
     socket.to(data.id).emit("updated_code", data.newCode);
   });
 
-  socket.on("code_exit", (id) => {
-    const index = parseInt(id) - 1;
-    deleteClient(index, socket.id);
+  socket.on("code_exit", () => {
+    deleteClient(socket.id);
+  });
+
+  socket.on("disconnecting", () => {
+    deleteClient(socket.id);
   });
 });
 
