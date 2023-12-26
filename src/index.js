@@ -13,7 +13,7 @@ const {
 const { getExercises } = require("./api");
 
 const corsOptions = {
-  origin: process.env.CLIENT_URL,
+  origin: "*",
   methods: ["GET", "POST"],
 };
 
